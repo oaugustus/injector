@@ -1,0 +1,14 @@
+{
+  "name": "singular/injector",
+  "description": "A JavaScript dinamic loader service to Silex.",
+  "keywords": ["assets", "dinamic", "silex","loading"],
+  "require": {
+    "silex/silex": "1.1",
+    "symfony/filesystem": "2.5.*@dev",
+    "symfony/finder": "2.3.*",
+    "tedivm/jshrink": "~1.0"
+  },
+  "autoload": {
+    "psr-0": { "Injector": "src/"}
+  }
+}
