@@ -35,20 +35,21 @@ class Injector
      * Carrega um módulo de scripts.
      *
      * @param string  $module
+     * @param string  $type
      *
      * @return string
      *
      * @throws \Exception
      */
-    public function inject($module)
+    public function inject($module, $type = 'js')
     {
         $paramKey = 'inject.'.$module;
         $this->moduleList = array();
 
         if (!isset($this->defs[$paramKey])) {
-            throw new \Exception('O módulo '.$module.' não foi definido no JsLoader!');
+            throw new \Exception('O módulo '.$module.' não foi definido nas configurações. O parâmetro "inject.'.$module.' não foi localizado!"');
         } else {
-            return $this->generateJs($paramKey);
+            return $this->injectResource($paramKey, $type);
         }
 
     }
@@ -57,20 +58,21 @@ class Injector
      * Gera os scripts dos módulos de acordo com a definição de configuração.
      *
      * @param string  $paramKey
+     * @param string  $type
      *
      * @return string
      */
-    protected function generateJs($paramKey)
+    protected function injectResource($paramKey, $type)
     {
         $key = explode('.',$paramKey);
-        $buildFileName = end($key).".build.js";
+        $buildFileName = end($key).".build.".$type;
         $buildFileFullname = $this->deployDir."/".$buildFileName;
 
         if (!$this->debug && file_exists($buildFileFullname)) {
-            printf("<script type='text/javascript' src='%s'></script>\n","./".$this->deployDir."/".$buildFileName);
+            print($this->createIncludeTag("./".$this->deployDir."/".$buildFileName, $type));
         } else {
 
-            $scripts = $this->buildScriptList($paramKey);
+            $scripts = $this->buildResourceList($paramKey, $type);
 
             $include = '';
 
@@ -79,7 +81,7 @@ class Injector
                 foreach ($list as $script) {
 
                     if ($this->debug) {
-                        $include.= sprintf("<script type='text/javascript' src='%s'></script>\n", $script);
+                        $include.= $this->createIncludeTag($script, $type);
                     } else {
                         @$include.= "\n".file_get_contents($this->webDir."/".$script)."\n";
                     }
@@ -91,8 +93,7 @@ class Injector
             } else {
                 file_put_contents($this->deployDir."/".$buildFileName,Minifier::minify($include));
 
-                printf("<script type='text/javascript' src='%s/%s'></script>\n",$this->deployDir,$buildFileName);
-
+                print($this->createIncludeTag("./".$this->deployDir."/".$buildFileName, $type));
             }
 
 
@@ -101,17 +102,36 @@ class Injector
     }
 
     /**
+     * Cria a tag de inclusão do recurso de acordo com o seu tipo.
+     *
+     * @param string $file
+     * @param strine $type
+     *
+     * @return string
+     */
+    protected function createIncludeTag($file, $type)
+    {
+        switch ($type) {
+            case 'js':
+                return sprintf("<script type='text/javascript' src='%s'></script>\n",$file);
+            case 'css':
+                return sprintf("<link rel='stylesheet' href='%s'>\n", $file);
+        }
+    }
+
+    /**
      * Cria a lista de scripts a serem inseridos no carregamento.
      *
      * @param string $module
+     * @param string $type
      *
      * @return array
      */
-    protected function buildScriptList($module)
+    protected function buildResourceList($module, $type)
     {
         $path = $this->defs[$module];
 
-        $list = $this->getScriptList($module, $path);
+        $list = $this->getResourceList($module, $path, $type);
         $list = array('module' => $list);
 
         return $list;
@@ -125,7 +145,7 @@ class Injector
      *
      * @return array
      */
-    private function getScriptList($module, $path)
+    private function getResourceList($module, $path, $type)
     {
         $finder = new Finder();
 
@@ -147,7 +167,7 @@ class Injector
         foreach ($directories as $dir) {
             $finder = new Finder();
 
-            $files = $finder->files()->in($dir)->name('*.js')->depth("== 0");
+            $files = $finder->files()->in($dir)->name('*.'.$type)->depth("== 0");
 
             foreach ($files as $script) {
                 $list[] = $dir.$script->getRelativePath()."/".$script->getFilename();

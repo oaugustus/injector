@@ -12,7 +12,8 @@ $app = new Silex\Application(array(
 ));
 
 $app->register(new \Injector\Provider\InjectorServiceProvider(), array(
-    'inject.modulo' => 'js/modulo'
+    'inject.modulo' => 'js/modulo',
+    'inject.estilo' => 'css'
 ));
 
 $app->get('/test/inject', function() use ($app){
@@ -26,5 +27,10 @@ $app->get('/test/deploy', function() use ($app){
     $app['injector']->inject('modulo');
 });
 
+$app->get('/test/inject/css', function() use ($app){
+    echo "<pre>";
+    $app['injector']->inject('estilo','css');
+    die();
+});
 
 $app->run();
