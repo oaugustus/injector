@@ -167,7 +167,7 @@ class Injector
         foreach ($directories as $dir) {
             $finder = new Finder();
 
-            $files = $finder->files()->in($dir)->name('*.'.$type)->depth("== 0");
+            $files = $finder->files()->in($dir)->name('*.'.$type)->depth("== 0")->sortByName();
 
             foreach ($files as $script) {
                 $list[] = $dir.$script->getRelativePath()."/".$script->getFilename();
