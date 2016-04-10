@@ -82,9 +82,9 @@ class Injector
                 foreach ($list as $script) {
 
                     if ($this->compile && $compile) {
-                        $include.= $this->createIncludeTag($script, $type);
-                    } else {
                         @$include.= "\n".file_get_contents($this->webDir."/".$script)."\n";
+                    } else {
+                        $include.= $this->createIncludeTag($script, $type);
                     }
                 }
             }
