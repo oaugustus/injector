@@ -11,7 +11,7 @@ class Injector
     protected $webDir = null;
     protected $deployDir = null;
     protected $defs = array();
-    protected $debug;
+    protected $compile;
     protected $scripts = array();
 
     private $moduleList = array();
@@ -22,13 +22,13 @@ class Injector
      * @param $sourceDir
      * @param $webDir
      */
-    public function __construct($sourceDir, $webDir, $deployDir, $defs, $debug = false)
+    public function __construct($sourceDir, $webDir, $deployDir, $defs, $compile = false)
     {
         $this->sourceDir = $sourceDir;
         $this->webDir = $webDir;
         $this->deployDir = $deployDir;
         $this->defs = $defs;
-        $this->debug = $debug;
+        $this->compile = $compile;
     }
 
     /**
@@ -41,7 +41,7 @@ class Injector
      *
      * @throws \Exception
      */
-    public function inject($module, $type = 'js')
+    public function inject($module, $type = 'js', $compile = true)
     {
         $paramKey = 'inject.'.$module;
         $this->moduleList = array();
@@ -49,7 +49,7 @@ class Injector
         if (!isset($this->defs[$paramKey])) {
             throw new \Exception('O módulo '.$module.' não foi definido nas configurações. O parâmetro "inject.'.$module.' não foi localizado!"');
         } else {
-            return $this->injectResource($paramKey, $type);
+            return $this->injectResource($paramKey, $type, $compile);
         }
 
     }
@@ -59,16 +59,17 @@ class Injector
      *
      * @param string  $paramKey
      * @param string  $type
+     * @param boolean $compile
      *
      * @return string
      */
-    protected function injectResource($paramKey, $type)
+    protected function injectResource($paramKey, $type, $compile)
     {
         $key = explode('.',$paramKey);
         $buildFileName = end($key).".build.".$type;
         $buildFileFullname = $this->deployDir."/".$buildFileName;
 
-        if (!$this->debug && file_exists($buildFileFullname)) {
+        if ($this->compile && file_exists($buildFileFullname)) {
             print($this->createIncludeTag("./".$this->deployDir."/".$buildFileName, $type));
         } else {
 
@@ -80,7 +81,7 @@ class Injector
 
                 foreach ($list as $script) {
 
-                    if ($this->debug) {
+                    if ($this->compile && $compile) {
                         $include.= $this->createIncludeTag($script, $type);
                     } else {
                         @$include.= "\n".file_get_contents($this->webDir."/".$script)."\n";
@@ -88,7 +89,7 @@ class Injector
                 }
             }
 
-            if ($this->debug) {
+            if ($this->compile && $compile) {
                 echo $include;
             } else {
                 file_put_contents($this->deployDir."/".$buildFileName,Minifier::minify($include));

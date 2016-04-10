@@ -32,7 +32,7 @@ class InjectorServiceProvider implements ServiceProviderInterface
                 throw new \Exception('Não foi definido o caminho da geração dos builds da aplicação ($app["deploy_dir"])!');
             }
 
-            return new Injector($app['src_dir'], $app['web_dir'], $app['deploy_dir'], $defs, $app['debug']);
+            return new Injector($app['src_dir'], $app['web_dir'], $app['deploy_dir'], $defs, $app['injector.compile']);
         });
     }
 
