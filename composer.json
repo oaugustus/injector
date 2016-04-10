@@ -6,7 +6,7 @@
     "silex/silex": "1.1",
     "symfony/filesystem": "2.5.*@dev",
     "symfony/finder": "2.*",
-    "tedivm/jshrink": "~1.0"
+    "tedivm/jshrink": "1.*"
   },
   "autoload": {
     "psr-0": { "Injector": "src/"}

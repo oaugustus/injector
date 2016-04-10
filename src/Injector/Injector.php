@@ -90,7 +90,7 @@ class Injector
             }
 
             if ($this->compile && $compile) {
-                file_put_contents($this->deployDir."/".$buildFileName,Minifier::minify($include));
+                file_put_contents($this->deployDir."/".$buildFileName,Minifier::minify($include,array('flaggedComments' => false)));
 
                 print($this->createIncludeTag("./".$this->deployDir."/".$buildFileName, $type));
             } else {
