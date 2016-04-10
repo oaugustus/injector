@@ -12,6 +12,7 @@ class Injector
     protected $deployDir = null;
     protected $defs = array();
     protected $compile;
+    protected $minify;
     protected $scripts = array();
 
     private $moduleList = array();
@@ -22,13 +23,14 @@ class Injector
      * @param $sourceDir
      * @param $webDir
      */
-    public function __construct($sourceDir, $webDir, $deployDir, $defs, $compile = false)
+    public function __construct($sourceDir, $webDir, $deployDir, $defs, $compile = false, $minify = false)
     {
         $this->sourceDir = $sourceDir;
         $this->webDir = $webDir;
         $this->deployDir = $deployDir;
         $this->defs = $defs;
         $this->compile = $compile;
+        $this->minify = $minify;
     }
 
     /**
@@ -90,7 +92,12 @@ class Injector
             }
 
             if ($this->compile && $compile) {
-                file_put_contents($this->deployDir."/".$buildFileName,Minifier::minify($include,array('flaggedComments' => false)));
+                if ($this->minify) {
+                    file_put_contents($this->deployDir."/".$buildFileName,Minifier::minify($include,array('flaggedComments' => false)));
+                } else {
+                    file_put_contents($this->deployDir."/".$buildFileName, $include);
+                }
+
 
                 print($this->createIncludeTag("./".$this->deployDir."/".$buildFileName, $type));
             } else {
