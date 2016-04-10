@@ -90,11 +90,11 @@ class Injector
             }
 
             if ($this->compile && $compile) {
-                echo $include;
-            } else {
                 file_put_contents($this->deployDir."/".$buildFileName,Minifier::minify($include));
 
                 print($this->createIncludeTag("./".$this->deployDir."/".$buildFileName, $type));
+            } else {
+                echo $include;
             }
 
 
