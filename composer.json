@@ -1,6 +1,6 @@
 {
   "name": "singular/injector",
-  "description": "A JavaScript dinamic loader service to Silex.",
+  "description": "A JavaScript dinamic loader service to Silex",
   "keywords": ["assets", "dinamic", "silex","loading"],
   "require": {
     "silex/silex": "1.1",
