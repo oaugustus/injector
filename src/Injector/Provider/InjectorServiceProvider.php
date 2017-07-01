@@ -4,41 +4,53 @@ namespace Injector\Provider;
 
 use Injector\Injector;
 use Silex\Application;
-use Silex\ServiceProviderInterface;
+use Pimple\Container;
+use Pimple\ServiceProviderInterface;
 
+/**
+ * Provedor de serviços do módulo Injector.
+ *
+ * @package Injector\Provider
+ */
 class InjectorServiceProvider implements ServiceProviderInterface
 {
-    public function register(Application $app)
+    /**
+     * Registra os serviços do módulo.
+     *
+     * @param Container $app
+     */
+    public function register(Container $app)
     {
-        $app['injector'] = $app->share(function() use ($app){
+        $app['injector'] = function() use ($app) {
             $keys = $app->keys();
             $defs = array();
 
-            foreach ($keys as $key){
+            foreach ($keys as $key) {
                 if (strpos($key,'inject.') !== false){
                     $defs[$key] = $app[$key];
                 }
             }
 
-            if (!$app['src_dir']) {
-                throw new \Exception('Não foi definido o diretório de scripts da aplicação ($app["src_dir"])!');
+            if (!$app['injector.directory.src']) {
+                throw new \Exception('Não foi definido o diretório de scripts da aplicação ($app["injector.directory.src"])!');
             }
 
-            if (!$app['web_dir']) {
-                throw new \Exception('Não foi definido o diretório web da aplicação ($app["web_dir"])!');
+            if (!$app['injector.directory.web']) {
+                throw new \Exception('Não foi definido o diretório web da aplicação ($app["injector.directory.web"])!');
             }
 
-            if (!$app['deploy_dir']) {
-                throw new \Exception('Não foi definido o caminho da geração dos builds da aplicação ($app["deploy_dir"])!');
+            if (!$app['injector.directory.deploy']) {
+                throw new \Exception('Não foi definido o caminho da geração dos builds da aplicação ($app["injector.directory.deploy"])!');
             }
 
-            return new Injector($app['src_dir'], $app['web_dir'], $app['deploy_dir'], $defs, $app['injector.compile'], $app['injector.minify']);
-        });
+            return new Injector(
+                $app['injector.directory.src'],
+                $app['injector.directory.web'],
+                $app['injector.directory.deploy'],
+                $defs,
+                $app['injector.compile'],
+                $app['injector.minify']
+            );
+        };
     }
-
-    public function boot(Application $app)
-    {
-
-    }
-
 }
