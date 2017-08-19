@@ -5,7 +5,7 @@
   "require": {
     "silex/silex": "2.1.0",
     "symfony/filesystem": "2.5.*@dev",
-    "symfony/finder": "2.*",
+    "symfony/finder": "^3.3",
     "tedivm/jshrink": "1.*"
   },
   "autoload": {
