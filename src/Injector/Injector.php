@@ -4,6 +4,7 @@ namespace Injector;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
 use JShrink\Minifier;
+use Less_Parser;
 
 class Injector
 {
@@ -67,8 +68,14 @@ class Injector
      */
     protected function injectResource($paramKey, $type, $compile)
     {
+        $ext = $type;
+
+        if ($ext == 'less') {
+            $ext = 'css';
+        }
+
         $key = explode('.',$paramKey);
-        $buildFileName = end($key).".build.".$type;
+        $buildFileName = end($key).".build.".$ext;
         $buildFileFullname = $this->deployDir."/".$buildFileName;
 
         if ($this->compile && file_exists($buildFileFullname)) {
@@ -92,7 +99,7 @@ class Injector
             }
 
             if ($this->compile && $compile) {
-                if ($this->minify) {
+                if ($this->minify && $type == 'js') {
                     file_put_contents($this->deployDir."/".$buildFileName,Minifier::minify($include,array('flaggedComments' => false)));
                 } else {
                     file_put_contents($this->deployDir."/".$buildFileName, $include);
@@ -124,7 +131,25 @@ class Injector
                 return sprintf("<script type='text/javascript' src='%s'></script>\n",$file);
             case 'css':
                 return sprintf("<link rel='stylesheet' href='%s'>\n", $file);
+            case 'less':
+                return sprintf("<style>\n%s</style>", $this->parseLess($file));
         }
+    }
+
+    /**
+     * Faz o parse do arquivo less.
+     *
+     * @param string $file
+     *
+     * @return string Conteúdo parseado
+     */
+    protected function parseLess($file)
+    {
+        $parser = new Less_Parser();
+
+        $parser->parseFile($file);
+
+        return $parser->getCss();
     }
 
     /**
@@ -156,6 +181,10 @@ class Injector
     private function getResourceList($module, $path, $type)
     {
         $finder = new Finder();
+
+        if (is_file($path)) {
+            return [$path];
+        }
 
         $dirs = $finder->directories()->in($path)->sortByType();
 
