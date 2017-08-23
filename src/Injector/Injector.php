@@ -32,6 +32,8 @@ class Injector
         $this->defs = $defs;
         $this->compile = $compile;
         $this->minify = $minify;
+
+        $this->checkDeployDir();
     }
 
     /**
@@ -39,20 +41,24 @@ class Injector
      *
      * @param string  $module
      * @param string  $type
+     * @param boolean $compile
      *
      * @return string
      *
      * @throws \Exception
      */
-    public function inject($module, $type = 'js', $compile = true)
+    public function inject($module, $type = 'js', $compile = false)
     {
-        $paramKey = 'inject.'.$module;
         $this->moduleList = array();
 
-        if (!isset($this->defs[$paramKey])) {
+        if ($this->compile) {
+            $compile = true;
+        }
+
+        if (!isset($this->defs['inject.'.$module])) {
             throw new \Exception('O módulo '.$module.' não foi definido nas configurações. O parâmetro "inject.'.$module.' não foi localizado!"');
         } else {
-            return $this->injectResource($paramKey, $type, $compile);
+            return $this->injectResource($module, $type, $compile);
         }
 
     }
@@ -60,67 +66,88 @@ class Injector
     /**
      * Gera os scripts dos módulos de acordo com a definição de configuração.
      *
-     * @param string  $paramKey
+     * @param string  $module
      * @param string  $type
      * @param boolean $compile
      *
      * @return string
      */
-    protected function injectResource($paramKey, $type, $compile)
+    protected function injectResource($module, $type, $compile)
     {
-        $ext = $type;
+        $ext = $this->getResourceExtension($type);
 
-        if ($ext == 'less') {
-            $ext = 'css';
-        }
-
-        $key = explode('.',$paramKey);
-        $buildFileName = end($key).".build.".$ext;
+        $buildFileName = $module.".build.".$ext;
         $buildFileFullname = $this->deployDir."/".$buildFileName;
+        $path = ".".str_replace($this->webDir, '', $this->deployDir)."/";
 
-        if ($this->compile && file_exists($buildFileFullname)) {
-            print($this->createIncludeTag("./".$this->deployDir."/".$buildFileName, $type));
+        // se está em estado de compilação e o arquivo compilado existe
+        if ($compile && file_exists($buildFileFullname)) {
+
+            if ($type == 'less') {
+                $type = 'css';
+            }
+
+            print($this->createIncludeTag($path.$buildFileName, $type));
         } else {
+            // recupera a lista de recursos
+            $scripts = $this->buildResourceList($module, $type);
 
-            $scripts = $this->buildResourceList($paramKey, $type);
+            // concatena os recursos para inclusão no template
+            $resource = $this->concatResources($scripts, $type, $compile);
 
-            $include = '';
+            if ($compile) { // se é para compilar
 
-            foreach ($scripts as $module => $list) {
-
-                foreach ($list as $script) {
-
-                    if ($this->compile && $compile) {
-                        @$include.= "\n".file_get_contents($this->webDir."/".$script)."\n";
-                    } else {
-                        $include.= $this->createIncludeTag($script, $type);
-                    }
-                }
-            }
-
-            if ($this->compile && $compile) {
+                // salva  o arquivo da compilação do recurso
                 if ($this->minify && $type == 'js') {
-                    file_put_contents($this->deployDir."/".$buildFileName,Minifier::minify($include,array('flaggedComments' => false)));
+                    file_put_contents($buildFileFullname,Minifier::minify($resource,array('flaggedComments' => false)));
                 } else {
-                    file_put_contents($this->deployDir."/".$buildFileName, $include);
+                    file_put_contents($buildFileFullname, $resource);
                 }
 
-
-                print($this->createIncludeTag("./".$this->deployDir."/".$buildFileName, $type));
+                // escreve o include da compilação
+                print($this->createIncludeTag($path.$buildFileName, $type));
             } else {
-                echo $include;
+                // escreve as tags de inclusão dos recursos não compilados
+                echo $resource;
             }
-
 
         }
 
     }
 
     /**
+     * Concatena os recursos para criação do script de build ou tags de inclusão.
+     *
+     * @param  array   $resources
+     * @param  string  $type
+     * @param  boolean $compile
+     *
+     * @return string
+     */
+    private function concatResources($resources, $type, $compile)
+    {
+        $concat = '';
+
+        foreach ($resources as $script) {
+            if ($compile) {
+                if ($type == 'less') {
+                    @$concat.= "\n".$this->parseLess($this->webDir."/".$script)."\n";
+                } else {
+                    @$concat.= "\n".file_get_contents($this->webDir."/".$script)."\n";
+                }
+            } else {
+                $concat.= $this->createIncludeTag($script, $type);
+            }
+        }
+
+        return $concat;
+    }
+
+    /**
      * Cria a tag de inclusão do recurso de acordo com o seu tipo.
      *
      * @param string $file
-     * @param strine $type
+     * @param string $type
      *
      * @return string
      */
@@ -162,10 +189,9 @@ class Injector
      */
     protected function buildResourceList($module, $type)
     {
-        $path = $this->defs[$module];
+        $path = $this->defs["inject.".$module];
 
         $list = $this->getResourceList($module, $path, $type);
-        $list = array('module' => $list);
 
         return $list;
     }
@@ -210,8 +236,37 @@ class Injector
                 $list[] = $dir.$script->getRelativePath()."/".$script->getFilename();
             }
         }
-
-
+        
         return $list;
+    }
+
+    /**
+     * Retorna a extensão de arquivo para compilação de um tipo de recurso.
+     *
+     * @param string $type
+     *
+     * @return string
+     */
+    private function getResourceExtension($type)
+    {
+        $ext = $type;
+
+        if ($ext == 'less') {
+            $ext = 'css';
+        }
+
+        return $ext;
+    }
+
+    /**
+     * Verifica se o diretório de deploy existe, e, caso não exista, força sua criação.
+     */
+    private function checkDeployDir()
+    {
+        $fs = new Filesystem();
+
+        if (!$fs->exists($this->deployDir)) {
+            $fs->mkdir($this->deployDir);
+        }
     }
 }
