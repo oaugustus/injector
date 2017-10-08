@@ -4,7 +4,7 @@
   "keywords": ["assets", "dinamic", "silex","loading"],
   "require": {
     "silex/silex": "~2.0",
-    "symfony/filesystem": "2.5.*@dev",
+    "symfony/filesystem": "^3.3",
     "symfony/finder": "^3.3",
     "tedivm/jshrink": "1.*",
     "oyejorge/less.php": "v1.7.0.14"
