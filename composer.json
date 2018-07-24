@@ -3,10 +3,11 @@
   "description": "A JavaScript dinamic loader service to Silex",
   "keywords": ["assets", "dinamic", "silex","loading"],
   "require": {
-    "silex/silex": "1.1",
+    "silex/silex": "1.3",
     "symfony/filesystem": "2.5.*@dev",
-    "symfony/finder": "2.*",
-    "tedivm/jshrink": "1.*"
+    "symfony/finder": "2.8.x-dev",
+    "tedivm/jshrink": "1.*",
+    "oyejorge/less.php": "v1.7.0.14"
   },
   "autoload": {
     "psr-0": { "Injector": "src/"}
