@@ -48,12 +48,12 @@ class Injector
      *
      * @throws \Exception
      */
-    public function inject($module, $type = 'js', $compile = false)
+    public function inject($module, $type = 'js', $compile = true)
     {
         $this->moduleList = array();
-        if ($this->compile) {
-            $compile = true;
-        }
+//         if ($this->compile) {
+//             $compile = true;
+//         }
         if (!isset($this->defs['inject.'.$module])) {
             throw new \Exception(
                 sprintf(
