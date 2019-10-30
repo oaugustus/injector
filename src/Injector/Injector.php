@@ -79,7 +79,7 @@ class Injector
         $ext = $this->getResourceExtension($type);
         $buildFileName = $module.'.build.'.$ext;
         $buildFileFullname = $this->deployDir.'/'.$buildFileName;
-        $path = '.'.str_replace($this->webDir, '', $this->deployDir).'/';
+        $path = str_replace($this->webDir, '', $this->deployDir).'/';
         // se está em estado de compilação e o arquivo compilado existe
         if ($compile && file_exists($buildFileFullname)) {
             if ($type == 'less') {
