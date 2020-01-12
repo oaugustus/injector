@@ -1,7 +1,6 @@
 <?php
 namespace Injector\Provider;
 
-
 use Injector\Injector;
 use Silex\Application;
 use Pimple\Container;
@@ -21,12 +20,12 @@ class InjectorServiceProvider implements ServiceProviderInterface
      */
     public function register(Container $app)
     {
-        $app['injector'] = function() use ($app) {
+        $app['injector'] = function () use ($app) {
             $keys = $app->keys();
-            $defs = array();
+            $defs = [];
 
             foreach ($keys as $key) {
-                if (strpos($key,'inject.') !== false){
+                if (strpos($key, 'inject.') !== false) {
                     $defs[$key] = $app[$key];
                 }
             }
